@@ -31,50 +31,46 @@ sudo apt-get install nginx -y
 sudo certbot --nginx -n \
   --agree-tos \
   --email $EMAIL_ADDRESS \
-  -d HOST_NAME --redirect --uir --staple-ocsp --must-staple
+  -d $HOST_NAME --redirect --uir --staple-ocsp --must-staple
 
-# Create nginx config file
-cat > /etc/nginx/sites-enabled/default <<EOF
-listen 80 ;
+
+cat > nginx.conf <<EOF
+server {
+  listen 80 ;
 	listen [::]:80 ;
     server_name $HOST_NAME;
-    return 404; # managed by Certbot
+    return 301 https://\$server_name\$request_uri;
 }
 
 server {
-
   gzip on;
 	gzip_min_length 1000;
 	gzip_proxied any;
 	gzip_types text/plain text/css application/json application/javascript application/x-javascript text/xml application/xml application/xml+rss text/javascript;
 
-	index index.html index.htm index.nginx-debian.html;
-        server_name $HOST_NAME; # managed by Certbot
+  server_name $HOST_NAME; # managed by Certbot
+  location / {
+    proxy_pass http://localhost:3001;
+  }
 
-	location / {
-		# First attempt to serve request as file, then
-		# as directory, then fall back to displaying a 404.
-		try_files $uri $uri/ =404;
-	}
+  listen [::]:443 ssl ipv6only=on; # managed by Certbot
+  listen 443 ssl; # managed by Certbot
+  ssl_certificate /etc/letsencrypt/live/$HOST_NAME/fullchain.pem; # managed by Certbot
+  ssl_certificate_key /etc/letsencrypt/live/$HOST_NAME/privkey.pem; # managed by Certbot
+  include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+  ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
-	  listen [::]:443 ssl ipv6only=on; # managed by Certbot
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/$HOST_NAME/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/$HOST_NAME/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
-    ssl_trusted_certificate /etc/letsencrypt/live/$HOST_NAME/chain.pem; # managed by Certbot
-    ssl_stapling on; # managed by Certbot
-    ssl_stapling_verify on; # managed by Certbot
+  ssl_trusted_certificate /etc/letsencrypt/live/$HOST_NAME/chain.pem; # managed by Certbot
+  ssl_stapling on; # managed by Certbot
+  ssl_stapling_verify on; # managed by Certbot
 
 }
 EOF
-
+sudo cp nginx.conf /etc/nginx/sites-enabled/default
 sudo service nginx restart
 
 #postgres
-docker run --name postgres2 -e POSTGRES_PASSWORD=develop -d postgres
+docker run --name postgres -e POSTGRES_PASSWORD=develop -d postgres
 sleep 3 # wait for db to spin up
 
 #gemtc
@@ -92,7 +88,7 @@ docker run -d \
  -e GEMTC_GOOGLE_SECRET=9ROcvzLDuRbITbqj-m-W5C0I \
  -e GEMTC_COOKIE_SECRET=GDFBDF#$%*asdfg098 \
  -e GEMTC_DB=gemtc \
- -e GEMTC_HOST=http://localhost:3001 \
+ -e GEMTC_HOST=https://$HOST_NAME \
  -e GEMTC_DB_USERNAME=gemtc \
  -e GEMTC_DB_PASSWORD=develop \
  -e PATAVI_CLIENT_CRT=ssl/crt.pem \
@@ -100,6 +96,8 @@ docker run -d \
  -e PATAVI_CA=ssl/ca-crt.pem \
  -e PATAVI_HOST=$HOST_NAME \
   addis/gemtc
+
+cd
 
 #rabbit
 docker run -d --hostname my-rabbit --name my-rabbit -p 5672:5672 -p 15672:15672 rabbitmq:3-management
@@ -112,15 +110,15 @@ cd ssl
 curl https://drugis.org/files/ca-crt.pem > ca-crt.pem
 sudo cp /etc/letsencrypt/live/$HOST_NAME/privkey.pem server-key.pem
 sudo cp /etc/letsencrypt/live/$HOST_NAME/cert.pem server-crt.pem
-chmod u+rx *
+sudo chmod u+rx *
 cd ..
 docker build --tag addis/patavi-server .
 docker run -d --name patavi-server \
   --link my-rabbit:rabbit \
-  --link postgres \
+  --link postgres:postgres \
   -e PATAVI_BROKER_HOST=rabbit \
   -p 3000:3000 \
-  -e PATAVI_SELF=//localhost:3000 \
+  -e PATAVI_SELF=//$HOST_NAME:3000 \
   -e PATAVI_PORT=3000 \
   -e PATAVI_DB_HOST=postgres \
   -e PATAVI_DB_NAME=patavi \

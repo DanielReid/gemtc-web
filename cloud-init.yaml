@@ -81,4 +81,3 @@ runcmd:
   - [sudo, usermod, -aG, docker, azureuser]
   - [git, clone, "https://github.com/drugis/gemtc-web"]
   - [cd, gemtc-web]
-  - 
