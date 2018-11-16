@@ -77,6 +77,7 @@ packages:
   - nginx
   - docker-ce
   - certbot
+  - python-certbot-nginx
 runcmd:
   - [sudo, usermod, -aG, docker, azureuser]
   - [git, clone, "https://github.com/drugis/gemtc-web"]

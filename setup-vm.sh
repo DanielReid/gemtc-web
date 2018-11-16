@@ -1,32 +1,32 @@
 export EMAIL_ADDRESS=osmosisch@gmail.com
 export HOST_NAME=pataviserver.westeurope.cloudapp.azure.com
 
-#install certbot
-sudo apt-get update
-sudo apt-get install software-properties-common -y
-sudo add-apt-repository ppa:certbot/certbot -y
-sudo apt-get update
-sudo apt-get install python-certbot-nginx -y
+# Uncomment if you're missing any of this software
+# #install certbot
+# sudo apt-get update
+# sudo apt-get install software-properties-common -y
+# sudo add-apt-repository ppa:certbot/certbot -y
+# sudo apt-get update
+# sudo apt-get install python-certbot-nginx -y
 
-#install docker-ce
-sudo apt-get install -y \
-    apt-transport-https \
-    ca-certificates \
-    curl \
-    software-properties-common
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-sudo add-apt-repository -y \
-   "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
-   $(lsb_release -cs) \
-   stable"
-sudo apt-get update
-sudo apt-get install docker-ce -y
+# #install docker-ce
+# sudo apt-get install -y \
+#     apt-transport-https \
+#     ca-certificates \
+#     curl \
+#     software-properties-common
+# curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+# sudo add-apt-repository -y \
+#    "deb [arch=amd64] https://download.docker.com/linux/ubuntu \
+#    $(lsb_release -cs) \
+#    stable"
+# sudo apt-get update
+# sudo apt-get install docker-ce -y
 
-#install nginx
-sudo add-apt-repository ppa:nginx/stable -y
-sudo apt-get update
-sudo apt-get install nginx -y
-
+# #install nginx
+# sudo add-apt-repository ppa:nginx/stable -y
+# sudo apt-get update
+# sudo apt-get install nginx -y
 
 sudo certbot --nginx -n \
   --agree-tos \
@@ -76,7 +76,7 @@ sleep 3 # wait for db to spin up
 #gemtc
 git clone https://github.com/drugis/gemtc-web
 cd gemtc-web
-git checkout develop
+git checkout feature/azure
 ./setup-db.sh
 
 docker run -d \
