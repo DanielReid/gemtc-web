@@ -13,7 +13,7 @@ var pataviHandlerService;
 describe('the patavi handler service', function() {
   describe('createPataviTask', function() {
     beforeEach(function() {
-      pataviTaskRepositoryStub = chai.spy.object(['create']);
+      pataviTaskRepositoryStub = chai.spy.interface('repoStub', ['create']);
       pataviHandlerService = proxyquire('../standalone-app/pataviHandlerService', {
         './pataviTaskRepository': pataviTaskRepositoryStub
       });
