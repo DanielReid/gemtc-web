@@ -32,7 +32,7 @@ describe('loginUtils', function() {
     });
 
     it('should redirect to signin if no user signed in on a secure url', function() {
-      response = chai.spy.object(['sendStatus']);
+      response = chai.spy.interface('response', ['sendStatus']);
       request.isAuthenticated = function() {
         return false;
       };
@@ -114,7 +114,7 @@ describe('loginUtils', function() {
           return token;
         }
       };
-      var response = chai.spy.object(['cookie']);
+      var response = chai.spy.interface('response', ['cookie']);
       var next = chai.spy();
 
       loginUtils.setXSRFTokenMiddleware(request, response, next);
